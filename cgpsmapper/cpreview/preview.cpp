@@ -487,26 +487,23 @@ void previewTDB::execute(bool &mdr, bool &pvx) {
 			exportIMG::out_file<<endl;
 			exportIMG::out_file<<"[END]"<<endl<<endl;
 		} else {
-			vcgl_gpc::gpc_polygon gb;
-			vcgl_gpc::gpc_polygon gret;
-//			vcgl_gpc::gpc_polygon gret2;
+			vcgl_gpc::gpc_polygon* big_poly = new vcgl_gpc::gpc_polygon();
+			vcgl_gpc::gpc_polygon* new_big_poly = new vcgl_gpc::gpc_polygon();
+			vcgl_gpc::gpc_polygon poly;
 
-			gb.num_contours = 0;
-			gb.contour = NULL;
+			big_poly->num_contours = 0;
+			big_poly->contour = NULL;
+			poly.num_contours = 1;
 
-			vcgl_gpc::gpc_vertex_list* vertex_list = (vcgl_gpc::gpc_vertex_list*)malloc(sizeof(vcgl_gpc::gpc_vertex_list));
-			vertex_list->vertex = (vcgl_gpc::gpc_vertex*)malloc(4 * sizeof(vcgl_gpc::gpc_vertex));
-			vertex_list->num_vertices = 4;
-
-			vertex_list->vertex[0].x = exportIMG::m_x0;	vertex_list->vertex[0].y = exportIMG::m_y0;
-			vertex_list->vertex[1].x = exportIMG::m_x0;	vertex_list->vertex[1].y = exportIMG::m_y1;
-			vertex_list->vertex[2].x = exportIMG::m_x1;	vertex_list->vertex[2].y = exportIMG::m_y1;
-			vertex_list->vertex[3].x = exportIMG::m_x1;	vertex_list->vertex[3].y = exportIMG::m_y0;
-			exportIMG::gpc.gpc_add_contour(&gb,vertex_list);
-
-			exportIMG::gpc.gpc_polygon_clip(vcgl_gpc::GPC_INT,&gb,exportIMG::background_poly,&gret);
-
-			//exportIMG::gpc.gpc_polygon_clip(vcgl_gpc::GPC_XOR,&gret2,&gb,&gret);
+			//union background contours one by one
+			for (int i = 0; i < exportIMG::background_poly->num_contours; i++){
+				poly.contour = &(exportIMG::background_poly->contour[i]);
+				exportIMG::gpc.gpc_polygon_clip(vcgl_gpc::GPC_UNION,big_poly,&poly,new_big_poly);
+				//swap pointers
+				vcgl_gpc::gpc_polygon* temp_pointer=new_big_poly;
+				new_big_poly = big_poly;
+				big_poly = temp_pointer;
+			}
 
 			exportIMG::out_file<<"[RGN80]"<<endl;
 			//exportIMG::out_file<<"Type=0x4"<<endl;
@@ -514,20 +511,21 @@ void previewTDB::execute(bool &mdr, bool &pvx) {
 			exportIMG::out_file<<"Label="<<trim(exportIMG::img_name) + "~[0x1d]" + exportIMG::img_filename<<endl;
 
 			//exportIMG::out_file<<"Data0=";//<<layer<<"=";
-			for( int j =0; j < gret.num_contours; ++j ) {
+			for( int j =0; j < big_poly->num_contours; ++j ) {
 				exportIMG::out_file<<endl<<"Data0=";//<<layer<<"=";
-				for( int i =0; i < gret.contour[j].num_vertices; ++i ) {					
-					exportIMG::out_file<<"("<<gret.contour[j].vertex[i].y<<","<<
-					gret.contour[j].vertex[i].x<<"),";					
+				for( int i =0; i < big_poly->contour[j].num_vertices; ++i ) {					
+					exportIMG::out_file<<"("<<big_poly->contour[j].vertex[i].y<<","<<
+					big_poly->contour[j].vertex[i].x<<"),";					
 				}
 			}
 
 			exportIMG::out_file<<endl;
 			exportIMG::out_file<<"[END]"<<endl<<endl;
 
-			exportIMG::gpc.gpc_free_polygon(&gb);
-			exportIMG::gpc.gpc_free_polygon(&gret);
-//			exportIMG::gpc.gpc_free_polygon(&gret2);
+			exportIMG::gpc.gpc_free_polygon(big_poly);
+			exportIMG::gpc.gpc_free_polygon(new_big_poly);
+			delete big_poly;
+			delete new_big_poly;
 		}
 		exportIMG::gpc.gpc_free_polygon(exportIMG::background_poly);
 
