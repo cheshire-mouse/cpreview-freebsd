@@ -44,14 +44,16 @@ void errorClass::showError(int line,const char* file_name,int code)
 	string	text;
 	if( file_name ) {
 		if( line >= 0 ) {
-			text = sprintf("%s (%d) : %s",file_name,line,warn_messages[code]);
+			sprintf(buffer,"%s (%d) : %s",file_name,line,warn_messages[code]);
+			text = string(buffer);
 /*			text = file_name;
 			text += "(";
 			text += itoa(line,buffer,10);
 			text += ") : ";
 			text += warn_messages[code];*/
 		} else {
-			text = sprintf("%s %s",warn_messages[code],file_name);
+			sprintf(buffer,"%s %s",warn_messages[code],file_name);
+			text = string(buffer);
 /*
 			text += warn_messages[code];
 			text += " ";
@@ -61,7 +63,7 @@ void errorClass::showError(int line,const char* file_name,int code)
 
 	if( !file_name ) {
 		cout<<warn_messages[code]<<endl;
-		text = warn_messages[code];
+		text = string(warn_messages[code]);
 	} else {
 		if( line >= 0 )
 			cout<<endl<<file_name<<"("<<line<<") : "<<warn_messages[code]<<endl;
