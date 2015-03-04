@@ -456,7 +456,7 @@ long IMG_internal_list::openMap(const char *file_name,int selected_file_no,int& 
 
 				new_file.lbl4_rec_len = 1;
 				if(new_file.lbl4_rec > 0)
-					while( static_cast<unsigned int>(0x1 << new_file.lbl4_rec_len * 8) < (lbl4_len / new_file.lbl4_rec))
+					while( static_cast<unsigned int>( (0x1 << new_file.lbl4_rec_len * 8) - 1) <= (lbl4_len / new_file.lbl4_rec))
 						new_file.lbl4_rec_len++;
 
 				memcpy(&new_file.lbl6_data,&read_buffer[87],4);

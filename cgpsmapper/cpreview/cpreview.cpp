@@ -53,7 +53,7 @@ int main (int argc,char* argv[]) {
 	cout<<"*******************************************************************************\n";
 	cout<<"              cGPSMapper home page: http://cgpsmapper.com \n";
 	cout<<"*******************************************************************************\n";
-	cout<<"              Preview & index builder for cGPSmapper - 6.9.003\n\n";
+	cout<<"              Preview & index builder for cGPSmapper - 6.9.004\n\n";
 	cout<<"FreeBSD modification by gryphon (OpenStreetMap)\n\n";
 	//cout<<"Preview builder is creating TDB preview file and MP preview file.\n";
 	//cout<<"You must compile MP file with cGPSmapper program separately to get preview IMG!\n\n";
