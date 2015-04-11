@@ -132,6 +132,20 @@ namespace exportIMG {
 
 		return 1;
 	}
+
+	bool isZeroarea(vcgl_gpc::gpc_vertex_list* contour){
+		if ( contour->num_vertices < 3 ) return true;
+		double sum = 0;
+		for (int i = 0; i < contour->num_vertices-2; i++ ) {
+			double x1 = contour->vertex[i+1].x - contour->vertex[i].x ;
+			double y1 = contour->vertex[i+1].y - contour->vertex[i].y ;
+			double x2 = contour->vertex[i+2].x - contour->vertex[i+1].x ;
+			double y2 = contour->vertex[i+2].y - contour->vertex[i+1].y ;
+			double cross_product = x1*y2 - x2*y1;
+			sum += cross_product;
+		}
+		return (sum==0.0);
+	}
 }
 //MDX
 MDX_element::MDX_element() {
@@ -495,23 +509,12 @@ void previewTDB::execute(bool &mdr, bool &pvx) {
 			big_poly->contour = NULL;
 			poly.num_contours = 1;
 
-			vcgl_gpc::gpc_vertex_list* vertex_list = (vcgl_gpc::gpc_vertex_list*)malloc(sizeof(vcgl_gpc::gpc_vertex_list));
-			vertex_list->vertex = (vcgl_gpc::gpc_vertex*)malloc(4 * sizeof(vcgl_gpc::gpc_vertex));
-			vertex_list->num_vertices = 4;
-			vertex_list->vertex[0].x = exportIMG::m_x0;     vertex_list->vertex[0].y = exportIMG::m_y0;
-			vertex_list->vertex[1].x = exportIMG::m_x0;     vertex_list->vertex[1].y = exportIMG::m_y1;
-			vertex_list->vertex[2].x = exportIMG::m_x1;     vertex_list->vertex[2].y = exportIMG::m_y1;
-			vertex_list->vertex[3].x = exportIMG::m_x1;     vertex_list->vertex[3].y = exportIMG::m_y0;
-			exportIMG::gpc.gpc_add_contour(big_poly,vertex_list);
-
 			//union background contours one by one
 			for (int i = 0; i < exportIMG::background_poly->num_contours; i++){
 				poly.contour = &(exportIMG::background_poly->contour[i]);
-				if ( i == 0 )
-					//this hack is devoted to zero-area poligons causing coredump
-					exportIMG::gpc.gpc_polygon_clip(vcgl_gpc::GPC_INT,big_poly,&poly,new_big_poly);
-				else
-					exportIMG::gpc.gpc_polygon_clip(vcgl_gpc::GPC_UNION,big_poly,&poly,new_big_poly);
+				//union with zero-area polygon would result in segmentation fault
+				if ( exportIMG::isZeroarea(poly.contour) ) continue;
+				exportIMG::gpc.gpc_polygon_clip(vcgl_gpc::GPC_UNION,big_poly,&poly,new_big_poly);
 				//swap pointers
 				vcgl_gpc::gpc_polygon* temp_pointer=new_big_poly;
 				new_big_poly = big_poly;
